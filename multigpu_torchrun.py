@@ -15,6 +15,7 @@ from torch.distributed import init_process_group, destroy_process_group
 from models import HybridNet,QCSLoss
 from utils.config import *
 from utils.loader import *
+from utils.args import Option
 
 sys=''
 torch.set_default_dtype(torch.float32)
@@ -98,7 +99,7 @@ class Trainer:
 
 def load_train_objs(args):
     model = HybridNet(args)
-    train_dataloader, _, _, _ =  g(args.batch_size)
+    train_dataloader, _, _ =  get_loader(args)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.3, patience=5, verbose=True)
@@ -136,39 +137,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description='simple distributed training job')
-    parser.add_argument('--total_epochs', type=int, default= 51, help='Total epochs to train the model')
-    parser.add_argument('--save_every', type=int, default=10, help='How often to save a snapshot')
-    parser.add_argument('--batch_size', default=25, type=int, help='Input batch size on each device (default: 23)')
-    parser.add_argument('--network', type = str, default = 'BGVAE', metavar = 'N',
-                        help = 'Deep learning model [NDVitResVAE, NDVitAE, SLViTAEQuant, SLViTAE,BGVAE]')
-    parser.add_argument('--patch_sizes_idx', type = int, default = 6, metavar = 'PS',
-                        help = 'patch size for ViT')
-    parser.add_argument('--dims_enc', type=int, nargs='+', default = [128, 64, 32], metavar = 'EM',
-                        help = 'Encoder dimensions') 
-    parser.add_argument('--h1h2h3', type=int, nargs='+', default = [16, 16, 16], metavar = 'H',
-                        help = 'Downsampling')   
-    parser.add_argument('--hidden_dim', type = int, default = 64, metavar = 'MH',
-                        help = 'Hiddent dimension of the MLP in ViT')
-    parser.add_argument('--mode', type = str, default = 'linear', metavar = 'M',
-                        help = 'Upsampling mode')
-    parser.add_argument('--lr', type = float, default = 0.006, metavar = 'L',
-                        help = 'Learning rate')
-    parser.add_argument('--beta', type = float, default = 0.28, metavar = 'B',
-                        help = 'Coefficients of VAVQE')
-    parser.add_argument('--decay', type = float, default = 0, metavar = 'D',
-                        help = 'EMA mode')
-    parser.add_argument('--num_embeddings', type = int, default = 64, metavar = 'NE',
-                        help = 'Codebook size of VQVAE')
-    parser.add_argument('--embeddings_dim', type = int, default = 1, metavar = 'ED',
-                        help = 'Codebook dimension of VQVAE')
-    parser.add_argument('--device', type = str, default = 'cuda:0', metavar = 'DV',
-                        help = 'GPU')
-    parser.add_argument('--succ_prob', type = float, default = 1/512, metavar = 'P',
-                        help = 'Probability of Geometric distribution')
-    parser.add_argument('--nd_enable', type = int, default = 1, metavar = 'P',
-                        help = 'Nested drop is enabled')
-    args = parser.parse_args()
-    
-    main(args)
+    config = Option().parse()
+    main(config)

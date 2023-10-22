@@ -14,7 +14,7 @@ from utils.config import Config
 from utils.loader import *
 from models import HybridNet,QCSLoss
 from utils.pytorchtools import set_seed
-
+from utils.args import Option
 
 # device = torch.device('cuda:0')
 torch.autograd.set_detect_anomaly(True)
@@ -136,47 +136,11 @@ def main(config):
     loss_file.close()
 
 if __name__ == '__main__':
-    """Run the script with the best configurations"""
-    parser = argparse.ArgumentParser(description='MIMO CSI Compression')  
-    # parser.add_argument('--network', type = str, default = 'BGVAE', metavar = 'N',
-    #                     help = 'Deep learning model [NDVitResVAE, NDVitAE, SLViTAEQuant, SLViTAE, BGVAE]')
-    # parser.add_argument('--patch_sizes_idx', type = int, default = 7, metavar = 'PS',
-    #                     help = 'patch size for ViT')
-    # parser.add_argument('--dims_enc', type=int, nargs='+', default = [128, 64, 32], metavar = 'EM',
-    #                     help = 'Encoder dimensions') 
-    # parser.add_argument('--h1h2h3', type=int, nargs='+', default = [16, 16, 16], metavar = 'H',
-    #                     help = 'Downsampling')   
-    # parser.add_argument('--hidden_dim', type = int, default = 64, metavar = 'MH',
-    #                     help = 'Hiddent dimension of the MLP in ViT')
-    parser.add_argument('--batch_size', type = int, default = 25, metavar = 'B',
-                        help = 'Batch size of the training')
-    # parser.add_argument('--mode', type = str, default = 'linear', metavar = 'M',
-    #                     help = 'Upsampling mode')
-    parser.add_argument('--lr', type = float, default = 0.006015353710001343, metavar = 'L',
-                        help = 'Learning rate')
-    # parser.add_argument('--beta', type = float, default = 0.2780677050121794, metavar = 'B',
-    #                     help = 'Coefficients of VAVQE')
-    parser.add_argument('--epochs', type = int, default = 100, metavar = 'E',
-                        help = 'numer of Epochs')
-    # parser.add_argument('--num_embeddings', type = int, default = 64, metavar = 'NE',
-    #                     help = 'Codebook size of VQVAE')
-    # parser.add_argument('--embeddings_dim', type = int, default = 1, metavar = 'ED',
-    #                     help = 'Codebook dimension of VQVAE')
-    parser.add_argument('--device', type = str, default = 'cuda:0', metavar = 'DV',
-                        help = 'GPU')
-    # parser.add_argument('--succ_prob', type = float, default = 1/512, metavar = 'P',
-    #                     help = 'Probability of Geometric distribution')
-    # parser.add_argument('--nd_enable', type = int, default = 1, metavar = 'P',
-    #                     help = 'Nested drop is enabled')
-    args = parser.parse_args()
     
-    config = Config()
-    config.device= args.device
-    config.epochs=args.epochs
-    config.batch_size=args.batch_size
-    config.lr = args.lr
-
+    config = Option().parse()
+    
     torch.cuda.empty_cache()
     torch.autograd.set_detect_anomaly(True)
+    
     set_seed(123456)
     main(config)
