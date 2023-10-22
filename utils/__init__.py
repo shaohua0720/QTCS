@@ -1,2 +1,2 @@
-from .config import GetConfig
-from .loader import train_loader
+from .config import Config
+from .loader import get_loader

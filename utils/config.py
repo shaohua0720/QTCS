@@ -1,33 +1,34 @@
 import os
 import torch
+import datetime
 
-
-class GetConfig:
+class Config:
     def __init__(self, ratio=0.1, device="cuda:0"):
         self.ratio = ratio
         self.epochs = 200
-        self.channel = 1
+        self.name = r'QCSMIMO'
+        self.comments = r'Quantized Compressed Sensing for CSI feedback'
+        self.batch_size = 25
+        self.train_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_7p68\\train.mat'
+        self.val_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_7p68\\val.mat'
+        self.test_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_7p68\\test.mat'
+        self.DDP = False # Distributed Data Parallel enabled/Disable
+        now = datetime.datetime.now()
+        self.start_time = now.strftime("%Y-%m-%d %H-%M-%S")
+        self.results = os.path.join(r'results', self.name)
+        # self.channel = 1
 
         self.block_size = 96
-        self.batch_size = 64
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
 
         # Paths
-        self.results = "./results"
+        # self.results = "./results"
         self.log = os.path.join(self.results, str(int(self.ratio * 100)), "log.txt")
 
         self.folder = os.path.join(self.results, str(int(self.ratio * 100)), "models")
         self.model = os.path.join(self.folder, "model.pth")
         self.optimizer = os.path.join(self.folder, "optimizer.pth")
         self.info = os.path.join(self.folder, "info.pth")
-
-        self.train_path = "./dataset/train"
-        if not os.path.isdir(self.train_path):
-            os.mkdir(self.train_path)
-        self.val_path = "./dataset/val"
-        if not os.path.isdir(self.val_path):
-            os.mkdir(self.val_path)
-        self.test_path = "./dataset/test"
 
     def check(self):
         if not os.path.isdir(self.results):
@@ -53,6 +54,6 @@ class GetConfig:
 
 
 if __name__ == "__main__":
-    config = GetConfig()
+    config = Config()
     config.check()
     config.show()
