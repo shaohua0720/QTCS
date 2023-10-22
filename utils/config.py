@@ -19,7 +19,7 @@ class Config:
         self.results = os.path.join(r'results', self.name)
         self.lr = 1e-4 # learning rate
 
-        self.block_size = 96
+        self.block_size = 32
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
 
         # Paths

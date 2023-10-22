@@ -11,7 +11,8 @@ class ChannelData(Dataset):
     def __init__(self, filepath,key_name) -> None:
         with h5py.File(filepath,'r') as CHL:
             CHL_np =np.real(CHL['/data'])
-            self.data =torch.from_numpy(CHL_np)
+            CHL_tensor = torch.from_numpy(CHL_np.astype(np.float32))
+            self.data = CHL_tensor
 
     def __len__(self):
         return self.data.shape[0]
