@@ -1,4 +1,5 @@
 import math
+import os
 import torch
 import numpy as np
 import torch.nn as nn
@@ -33,9 +34,13 @@ class Conv(Module):
         self.padding = _pair(1)
         self.init = nn.Parameter(torch.zeros([ic, 9, 9], dtype=torch.float32))
         init.kaiming_uniform_(self.w, a=math.sqrt(5))
+        if config.DDP:
+            self.device = int(os.environ["LOCAL_RANK"])
+        else:
+            self.device = config.device
 
     def forward(self, inputs):
-        init = self.init + torch.eye(9, dtype=torch.float32).unsqueeze(0).repeat((self.ic, 1, 1)).to(self.config.device)
+        init = self.init + torch.eye(9, dtype=torch.float32).unsqueeze(0).repeat((self.ic, 1, 1)).to(self.device)
         weight = torch.reshape(torch.einsum('abc, dac->dab', init, self.w), (self.oc, self.ic, 3, 3))
         outputs = F.conv2d(inputs, weight, None, 1, self.padding)
         return outputs
@@ -152,52 +157,54 @@ class HybridNet(nn.Module):
 
     def forward(self, inputs):
         batch_size = inputs.size(0)
+        inputs = torch.unsqueeze(inputs,1)
         y = self.sampling(inputs, self.phi_size)
         recon = self.recon(y, self.phi_size, batch_size)
+        recon= torch.squeeze(recon,1)
         return recon
 
-    def sampling(self, inputs, init_block): # B H W
-        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=2), dim=0) 
-        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=1), dim=0) 
-        inputs = torch.reshape(inputs, [-1, init_block ** 2]) 
-        inputs = torch.transpose(inputs, 0, 1)
-        y = torch.matmul(self.phi, inputs)
+    def sampling(self, inputs, init_block): # B C H W
+        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=3), dim=0) # (B W/IB) C H IB
+        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=2), dim=0) # (B W/IB H/IB) C IB IB
+        inputs = torch.reshape(inputs, [-1, init_block ** 2]) # (B W/IB H/IB C) (IB IB)
+        inputs = torch.transpose(inputs, 0, 1) #(IB IB) (B W/IB H/IB C)
+        y = torch.matmul(self.phi, inputs) # (M=R*IB^2) (B W/IB H/IB C)
         return y
 
     def recon(self, y, init_block, batch_size):
         idx = int(self.config.block_size / init_block)
 
-        recon = torch.matmul(self.Q, y) # 
+        recon = torch.matmul(self.Q, y) # (IB IB) x M x M x (B W/IB H/IB C) = (IB IB) (B W/IB H/IB C)
         for i in range(self.num_layers):
             recon = recon - self.weights[i] * torch.mm(torch.transpose(self.phi, 0, 1), (torch.mm(self.phi, recon) - y))
             recon = recon - self.pre_block[i](recon)
-            recon = torch.reshape(torch.transpose(recon, 0, 1), [-1, init_block, init_block])  # (B W/IB H/IB C) 1 IB IB = M 1 IB IB
-            recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=1) # K 1 IB*M/K IB
-            recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=2) # IDX 1 IB/M/K IB/IDX
+            recon = torch.reshape(torch.transpose(recon, 0, 1), [-1, 1, init_block, init_block])  # (B W/IB H/IB C) 1 IB IB = M 1 IB IB
+            recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=2) # K 1 IB*M/K IB
+            recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=3) # IDX 1 IB/M/K IB/IDX
             recon = self.size256to8(recon) # IDX (S L) 8 8
             recon = recon - self.etas[i] * self.trans[i](recon)
             recon = self.size8to256(recon)
             recon = recon - self.post_block[i](recon)
 
+            recon = torch.cat(torch.split(recon, split_size_or_sections=init_block, dim=3), dim=0)
             recon = torch.cat(torch.split(recon, split_size_or_sections=init_block, dim=2), dim=0)
-            recon = torch.cat(torch.split(recon, split_size_or_sections=init_block, dim=1), dim=0)
             recon = torch.reshape(recon, [-1, init_block ** 2])
             recon = torch.transpose(recon, 0, 1)
 
-        recon = torch.reshape(torch.transpose(recon, 0, 1), [-1,init_block, init_block])
-        recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=1)
-        recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=2)
+        recon = torch.reshape(torch.transpose(recon, 0, 1), [-1, 1, init_block, init_block])
+        recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=2)
+        recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=3)
         return recon
 
     def size8to256(self, inputs):
         idx = int(self.config.block_size / 8)
-        outputs = torch.cat(torch.split(inputs, split_size_or_sections=idx, dim=1), dim=1)
-        outputs = torch.cat(torch.split(outputs, split_size_or_sections=1, dim=1), dim=2)
+        outputs = torch.cat(torch.split(inputs, split_size_or_sections=idx, dim=1), dim=2)
+        outputs = torch.cat(torch.split(outputs, split_size_or_sections=1, dim=1), dim=3)
         return outputs
 
     def size256to8(self, inputs):
+        inputs = torch.cat(torch.split(inputs, split_size_or_sections=8, dim=3), dim=1)
         inputs = torch.cat(torch.split(inputs, split_size_or_sections=8, dim=2), dim=1)
-        inputs = torch.cat(torch.split(inputs, split_size_or_sections=8, dim=1), dim=1)
         return inputs
 
 def QCSLoss(x, reco_x):

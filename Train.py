@@ -23,28 +23,29 @@ def train_epoch(model, optimizer, train_loader, config):
     total_samples = len(train_loader.dataset)
     model.train()
 
-    # i = 0
+    i = 0
     loss = []
-    for i, data in enumerate(train_loader):
+    for data, target in train_loader:
         i = i +1
         optimizer.zero_grad()
         data = data.to(device)
+        target = target.to(device)
         output = model(data)
-        loss = QCSLoss(output,data)
+        loss = QCSLoss(output,target)
             
         loss.backward()
         optimizer.step()
 
-        if i % 200 == 0:
-            print(
-                '[' + '{:5}'.format(i * len(data)) + '/' +
-                '{:5}'.format(total_samples)
-                + ' (' + '{:3.0f}'.format(100 * i /
-                                          len(train_loader)) + '%)]  train loss: '
-                + format(
-                    loss.item(), '.3f'
-                )
+        # if i % 10 == 0:
+        print(
+            '[' + '{:5}'.format(i * len(data)) + '/' +
+            '{:5}'.format(total_samples)
+            + ' (' + '{:3.0f}'.format(100 * i /
+                                        len(train_loader)) + '%)]  train loss: '
+            + format(
+                loss.item(), '.3f'
             )
+        )
 
 def output(model, data_loader,config):
     device = config.device
@@ -63,8 +64,8 @@ def output(model, data_loader,config):
             i += 1
         return true, pre
 
-def evaluate(model, data_loader):
-    true, pre,_ = output(model, data_loader)
+def evaluate(model, data_loader,config):
+    true, pre = output(model, data_loader,config)
     nmse, mse, nmse_all = nmse_eval(true, pre)
     
     print('\nvalidation loss (mse): ' + format(mse.item(), '.3f'))
@@ -107,7 +108,7 @@ def main(config):
 
         train_epoch(model, optimizer, train_loader, config)
 
-        val_loss_nmse, val_loss_mse = evaluate(model, config)
+        val_loss_nmse, val_loss_mse = evaluate(model, val_loader, config)
         logs.add_scalar('validate MSE(dB)',10*np.log10(val_loss_mse.cpu()),epoch)
         scheduler.step(val_loss_mse)
 
@@ -138,9 +139,10 @@ def main(config):
 if __name__ == '__main__':
     
     config = Option().parse()
-    
+    config.check()
+    config.show()
     torch.cuda.empty_cache()
-    torch.autograd.set_detect_anomaly(True)
-    
+    # torch.autograd.set_detect_anomaly(True)
+
     set_seed(123456)
     main(config)

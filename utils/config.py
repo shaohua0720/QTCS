@@ -4,15 +4,15 @@ import datetime
 import pickle
 
 class Config:
-    def __init__(self, ratio=0.1, device="cuda:0"):
+    def __init__(self, ratio=0.1, device="cuda:1"):
         self.ratio = ratio
         self.epochs = 200
         self.name = r'QCSMIMO'
         self.comments = r'Quantized Compressed Sensing for CSI feedback'
-        self.batch_size = 25
-        self.train_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_7p68\\train.h5'
-        self.val_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_7p68\\val.h5'
-        self.test_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_7p68\\test.h5'
+        self.batch_size = 200
+        self.train_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_3p84\\val.h5'
+        self.val_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_3p84\\test.h5'
+        self.test_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_3p84\\test.h5'
         self.DDP = False # Distributed Data Parallel enabled/Disable
         now = datetime.datetime.now()
         self.start_time = now.strftime("%Y-%m-%d %H-%M-%S")
@@ -21,6 +21,7 @@ class Config:
 
         self.block_size = 32
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+        self.save_every = 10
 
         # Paths
         # self.results = "./results"

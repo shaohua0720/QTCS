@@ -37,6 +37,6 @@ class Option:
         self.config.test_data = args.test_data or self.config.test_data
         self.config.ratio = args.ratio or self.config.ratio
 
-        self.config.check()
-        self.config.show()
+        # self.config.check()
+        # self.config.show()
         return self.config

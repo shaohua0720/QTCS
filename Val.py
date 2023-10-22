@@ -4,20 +4,20 @@ import time
 import datetime
 import argparse
 import pickle
+import torch
 import scipy.io as scio
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.dataset_init_utils import get_dataset, get_dl_test_set
+from utils.loader import get_loader
 from utils.pytorchtools import EarlyStopping
-from model.slvit_ae import *
-from model.hybrid_vqvae import *
+from models.demo import HybridNet,QCSLoss
 
-from utils.load_data_model import load_dataloader,load_model
-from main_res_vae_quant_Train import output,nmse_eval
-from utils.matrw import *
+# from utils.load_data_model import load_dataloader,load_model
+from Train import output,nmse_eval
+# from utils.matrw import *
 
 method = r'MGPU'
 
@@ -28,8 +28,8 @@ def main(config):
     device = config.device
     foldername = config.foldername
     
-    _, _, test_loader, dl_test_loader_1 = load_dataloader(batch_size=config.batch_size)
-    model = load_model(config=config)
+    _, _, test_loader, dl_test_loader_1 = get_loader(config)
+    model = HybridNet(config)
 
     if method == r'MGPU':
         snapshot = torch.load(config.snapshot_path)
