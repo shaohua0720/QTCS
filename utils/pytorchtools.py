@@ -1,5 +1,12 @@
 import numpy as np
 import torch
+import random
+
+def set_seed(seed):
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""

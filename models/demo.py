@@ -156,12 +156,12 @@ class HybridNet(nn.Module):
         recon = self.recon(y, self.phi_size, batch_size)
         return recon
 
-    def sampling(self, inputs, init_block): # B C H W
-        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=3), dim=0) # (B W/IB) C H IB
-        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=2), dim=0) # (B W/IB H/IB) C IB IB
-        inputs = torch.reshape(inputs, [-1, init_block ** 2]) # (B W/IB H/IB C) (IB IB)
-        inputs = torch.transpose(inputs, 0, 1) #(IB IB) (B W/IB H/IB C)
-        y = torch.matmul(self.phi, inputs) # (M=R*IB^2) (B W/IB H/IB C)
+    def sampling(self, inputs, init_block): # B H W
+        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=2), dim=0) 
+        inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=2), dim=0) 
+        inputs = torch.reshape(inputs, [-1, init_block ** 2]) 
+        inputs = torch.transpose(inputs, 0, 1)
+        y = torch.matmul(self.phi, inputs)
         return y
 
     def recon(self, y, init_block, batch_size):
@@ -172,21 +172,21 @@ class HybridNet(nn.Module):
             recon = recon - self.weights[i] * torch.mm(torch.transpose(self.phi, 0, 1), (torch.mm(self.phi, recon) - y))
             recon = recon - self.pre_block[i](recon)
             recon = torch.reshape(torch.transpose(recon, 0, 1), [-1, 1, init_block, init_block])  # (B W/IB H/IB C) 1 IB IB = M 1 IB IB
-            recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=2) # K 1 IB*M/K IB
-            recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=3) # IDX 1 IB/M/K IB/IDX
+            recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=1) # K 1 IB*M/K IB
+            recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=2) # IDX 1 IB/M/K IB/IDX
             recon = self.size256to8(recon) # IDX (S L) 8 8
             recon = recon - self.etas[i] * self.trans[i](recon)
             recon = self.size8to256(recon)
             recon = recon - self.post_block[i](recon)
 
-            recon = torch.cat(torch.split(recon, split_size_or_sections=init_block, dim=3), dim=0)
             recon = torch.cat(torch.split(recon, split_size_or_sections=init_block, dim=2), dim=0)
+            recon = torch.cat(torch.split(recon, split_size_or_sections=init_block, dim=1), dim=0)
             recon = torch.reshape(recon, [-1, init_block ** 2])
             recon = torch.transpose(recon, 0, 1)
 
         recon = torch.reshape(torch.transpose(recon, 0, 1), [-1, 1, init_block, init_block])
-        recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=2)
-        recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=3)
+        recon = torch.cat(torch.split(recon, split_size_or_sections=idx * batch_size, dim=0), dim=1)
+        recon = torch.cat(torch.split(recon, split_size_or_sections=batch_size, dim=0), dim=2)
         return recon
 
     def size8to256(self, inputs):
@@ -200,3 +200,6 @@ class HybridNet(nn.Module):
         inputs = torch.cat(torch.split(inputs, split_size_or_sections=8, dim=2), dim=1)
         return inputs
 
+def QCSLoss(x, reco_x):
+    mse_loss = F.mse_loss(reco_x, x,reduction='sum')/x.shape[0]
+    return mse_loss

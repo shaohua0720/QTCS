@@ -2,14 +2,16 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.distributed import DistributedSampler
 import h5py
-from config import Config
+import torch
+from .config import Config
+import os
+os.environ['PYDEVD_WARN_EVALUATION_TIMEOUT']='120'
 
 class ChannelData(Dataset):
     def __init__(self, filepath,key_name) -> None:
-        CHL = h5py.File(filepath)
-        CHL_R = np.real(CHL[key_name])
-        CHL_I = np.imag(CHL[key_name])
-        self.data = np.concatenate([CHL_R,CHL_I],axis=1)
+        with h5py.File(filepath,'r') as CHL:
+            CHL_np =np.real(CHL['/data'])
+            self.data =torch.from_numpy(CHL_np)
 
     def __len__(self):
         return self.data.shape[0]

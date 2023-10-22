@@ -12,8 +12,9 @@ import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
-from model.bg_vae import bgvae_loss
-from utils.load_data_model import load_model,prepare_dataloader_parallel
+from models import HybridNet,QCSLoss
+from utils.config import *
+from utils.loader import *
 
 sys=''
 torch.set_default_dtype(torch.float32)
@@ -65,7 +66,7 @@ class Trainer:
         # reco_loss = F.mse_loss(data_reco, source)
         # loss = reco_loss + loss_t
         data_reco, _  = self.model(source)
-        loss = bgvae_loss(data_reco,targets)
+        loss = QCSLoss(data_reco,targets)
                         
         # loss = F.cross_entropy(output, targets)
         loss.backward()
@@ -96,8 +97,8 @@ class Trainer:
 
 
 def load_train_objs(args):
-    model = load_model(args)
-    train_dataloader, _, _, _ = prepare_dataloader_parallel(args.batch_size)
+    model = HybridNet(args)
+    train_dataloader, _, _, _ =  g(args.batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.3, patience=5, verbose=True)
