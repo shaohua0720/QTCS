@@ -83,6 +83,13 @@ def nmse_eval(y_true, y_pred):
     nmse = mse / power
     return torch.mean(nmse), torch.mean(mse), nmse
 
+def _load_snapshot(model, snapshot_path):
+        snapshot = torch.load(snapshot_path)
+        model.load_state_dict(snapshot["MODEL_STATE"])
+        epochs_run = snapshot["EPOCHS_RUN"]
+        print(f"Resuming training from snapshot at Epoch {epochs_run}")
+        return epochs_run
+
 def _save_snapshot(model, config, epoch):
         snapshot = {
             "MODEL_STATE": model.state_dict(),
@@ -105,7 +112,11 @@ def main(config):
     n_epochs = config.epochs
     start_time = time.time()
 
-    for epoch in range(1, n_epochs + 1):
+    start_epoch = 1
+    if config.resume:
+        start_epoch=_load_snapshot(model,config.snapshot_path)
+
+    for epoch in range(start_epoch, n_epochs + 1):
         print('Epoch:', epoch)
         train_epoch(model, optimizer, train_loader, config)
         # update scheduler

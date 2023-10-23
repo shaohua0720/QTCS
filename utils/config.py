@@ -22,6 +22,7 @@ class Config:
         self.block_size = 32
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         self.save_every = 5
+        self.resume = True # resume training
 
         # Paths
         # self.results = "./results"
