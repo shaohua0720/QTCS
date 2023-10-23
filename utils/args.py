@@ -10,7 +10,7 @@ class Option:
                             help = 'Batch size of the training')
         parser.add_argument('--lr', type = float, metavar = 'L',
                             help = 'Learning rate')
-        parser.add_argument('--epochs', type = int, default = 500, metavar = 'E',
+        parser.add_argument('--epochs', type = int, metavar = 'E',
                             help = 'numer of Epochs')
         parser.add_argument('--device', type = str,  metavar = 'DV',
                             help = 'GPU')
