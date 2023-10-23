@@ -24,6 +24,8 @@ class Option:
                             help = 'test data file path')
         parser.add_argument('--ratio', type = str, metavar = 'DV',
                             help = 'CS ratio parameter')
+        parser.add_argument('--save_every', type = int, metavar = 'DV',
+                            help = 'save model snapshot')
         args = parser.parse_args()
 
         """Update the default Config with the command params"""

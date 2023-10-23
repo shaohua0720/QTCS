@@ -83,8 +83,15 @@ def nmse_eval(y_true, y_pred):
     nmse = mse / power
     return torch.mean(nmse), torch.mean(mse), nmse
 
+def _save_snapshot(model, config, epoch):
+        snapshot = {
+            "MODEL_STATE": model.module.state_dict(),
+            "EPOCHS_RUN": epoch,
+        }
+        torch.save(snapshot, config.snapshot_path)
+        print(f"Epoch {epoch} | Training snapshot saved at {config.snapshot_path}")
+
 def main(config):
-    config.check()
     train_loader, val_loader, test_loader = get_loader(config)
     model = HybridNet(config).to(config.device)        
     logs = SummaryWriter(config.folder)
@@ -93,24 +100,20 @@ def main(config):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.3, patience=5, verbose=True)
 
-    # train the model
-    reco_loss_history = []
-    commit_loss_history = []
-
     es = EarlyStopping(patience=10, verbose=False, delta=0.001, path=config.model)
 
     n_epochs = config.epochs
-
     start_time = time.time()
 
     for epoch in range(1, n_epochs + 1):
         print('Epoch:', epoch)
-
         train_epoch(model, optimizer, train_loader, config)
-
         val_loss_nmse, val_loss_mse = evaluate(model, val_loader, config)
         logs.add_scalar('validate MSE(dB)',10*np.log10(val_loss_mse.cpu()),epoch)
+        
         scheduler.step(val_loss_mse)
+        if epoch % config.save_every == 0:
+            _save_snapshot(model,config,epoch)
 
         # early stopping
         es(val_loss_mse, model)
@@ -122,19 +125,18 @@ def main(config):
         time.time() - start_time), 'seconds')
     print('--'*20)
 
-    model.load_state_dict(torch.load(config.model))
-    loss_file = open(os.path.join(config.folder, 'config.txt'), 'a+')
-
     # evaluate NMSE
+    model.load_state_dict(torch.load(config.model))
+    rs_file = open(os.path.join(config.folder, 'config.txt'), 'a+')
     model.eval()
     true_channels, pred_channels,_ = output(model, test_loader)
     nmse_test, mse_test, nmse_ul = nmse_eval(true_channels, pred_channels)
-    print('\nafter training:', file=loss_file)
-    print('\ntest loss', file=loss_file)
-    print('nmse = ' + str(nmse_test.item()), file=loss_file)
-    print('mse = ' + str(mse_test.item()), file=loss_file)
+    print('\nafter training:', file=rs_file)
+    print('\ntest loss', file=rs_file)
+    print('nmse = ' + str(nmse_test.item()), file=rs_file)
+    print('mse = ' + str(mse_test.item()), file=rs_file)
     np.save(os.path.join(config.folder, 'nmse_ul'), nmse_ul.cpu())
-    loss_file.close()
+    rs_file.close()
 
 if __name__ == '__main__':
     

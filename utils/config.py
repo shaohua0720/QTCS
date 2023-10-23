@@ -29,6 +29,7 @@ class Config:
 
         self.folder = os.path.join(self.results, str(int(self.ratio * 100)), "models")
         self.model = os.path.join(self.folder, "model.pth")
+        self.snapshot_path = os.path.join(self.folder, "model_epochs.pth")
         self.optimizer = os.path.join(self.folder, "optimizer.pth")
         self.info = os.path.join(self.folder, "info.pth")
 
