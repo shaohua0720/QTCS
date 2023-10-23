@@ -85,7 +85,7 @@ def nmse_eval(y_true, y_pred):
 
 def _save_snapshot(model, config, epoch):
         snapshot = {
-            "MODEL_STATE": model.module.state_dict(),
+            "MODEL_STATE": model.state_dict(),
             "EPOCHS_RUN": epoch,
         }
         torch.save(snapshot, config.snapshot_path)
