@@ -21,7 +21,7 @@ class Config:
 
         self.block_size = 32
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
-        self.save_every = 10
+        self.save_every = 5
 
         # Paths
         # self.results = "./results"
@@ -29,7 +29,7 @@ class Config:
 
         self.folder = os.path.join(self.results, str(int(self.ratio * 100)), "models")
         self.model = os.path.join(self.folder, "model.pth")
-        self.snapshot_path = os.path.join(self.folder, "model_epochs.pth")
+        self.snapshot_path = os.path.join(self.folder, "model_snp.pth")
         self.optimizer = os.path.join(self.folder, "optimizer.pth")
         self.info = os.path.join(self.folder, "info.pth")
 

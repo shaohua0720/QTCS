@@ -108,10 +108,11 @@ def main(config):
     for epoch in range(1, n_epochs + 1):
         print('Epoch:', epoch)
         train_epoch(model, optimizer, train_loader, config)
+        # update scheduler
         val_loss_nmse, val_loss_mse = evaluate(model, val_loader, config)
         logs.add_scalar('validate MSE(dB)',10*np.log10(val_loss_mse.cpu()),epoch)
-        
         scheduler.step(val_loss_mse)
+
         if epoch % config.save_every == 0:
             _save_snapshot(model,config,epoch)
 
