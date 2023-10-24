@@ -56,10 +56,10 @@ def output(model, data_loader,config):
             data = data.to(device)
             target = target.to(device)
             if i == 0:
-                pre = model(data)
+                pre = model(data)[0]
                 true = target
             else:
-                pre = torch.cat((pre, model(data)), dim=0)
+                pre = torch.cat((pre, model(data)[0]), dim=0)
                 true = torch.cat((true, target), dim=0)
             i += 1
         return true, pre
