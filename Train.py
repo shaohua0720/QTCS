@@ -64,7 +64,7 @@ def output(model, data_loader,config):
             i += 1
         return true, pre
 
-def evaluate(model, data_loader,config):
+def evaluate(model, data_loader, config):
     true, pre = output(model, data_loader,config)
     nmse, mse, nmse_all = nmse_eval(true, pre)
     
@@ -141,14 +141,15 @@ def main(config):
     model.load_state_dict(torch.load(config.model))
     rs_file = open(os.path.join(config.folder, 'config.txt'), 'a+')
     model.eval()
-    true_channels, pred_channels,_ = output(model, test_loader)
+    true_channels, pred_channels = output(model, test_loader,config)
     nmse_test, mse_test, nmse_ul = nmse_eval(true_channels, pred_channels)
     print('\nafter training:', file=rs_file)
     print('\ntest loss', file=rs_file)
     print('nmse = ' + str(nmse_test.item()), file=rs_file)
     print('mse = ' + str(mse_test.item()), file=rs_file)
-    np.save(os.path.join(config.folder, 'nmse_ul'), nmse_ul.cpu())
     rs_file.close()
+    np.save(os.path.join(config.folder, 'nmse_ul'), nmse_ul.cpu())
+    
 
 if __name__ == '__main__':
     

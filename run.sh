@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 # python main_res_vae_quant_Train.py --network "NDVitResVAE" --num_embeddings 4
 # python main_res_vae_quant_Train.py --network "NDVitResVAE" --num_embeddings 16
 # python main_res_vae_quant_Train.py --network "NDVitResVAE" --num_embeddings 32
@@ -16,5 +16,6 @@
 # python main_res_vae_quant_Train.py --network "SLViTAEQuant" --num_embeddings 64
 
 # for distributed running
-torchrun --standalone --nproc_per_node=4 multigpu_torchrun.py --total_epochs 100 --save_every 10
+# torchrun --standalone --nproc_per_node=4 multigpu_torchrun.py --total_epochs 200 --save_every 10
+torchrun --standalone --nproc_per_node=4 multigpu_torchrun.py
 
