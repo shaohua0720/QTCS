@@ -22,9 +22,11 @@ class Option:
                             help = 'val data file path')
         parser.add_argument('--test_data', type = str, metavar = 'DV',
                             help = 'test data file path')
-        parser.add_argument('--ratio', type = str, metavar = 'DV',
+        parser.add_argument('--ratio', type = float, metavar = 'DV',
                             help = 'CS ratio parameter')
         parser.add_argument('--save_every', type = int, metavar = 'DV',
+                            help = 'save model snapshot')
+        parser.add_argument('--n_embed', type = int, metavar = 'DV',
                             help = 'save model snapshot')
         args = parser.parse_args()
 
@@ -37,7 +39,8 @@ class Option:
         self.config.train_data = args.train_data or self.config.train_data
         self.config.val_data = args.val_data or self.config.val_data
         self.config.test_data = args.test_data or self.config.test_data
-        self.config.ratio = args.ratio or self.config.ratio
+        self.config.ratio =args.ratio or self.config.ratio
+        self.config.n_embed = args.n_embed or self.config.n_embed
 
         # self.config.check()
         # self.config.show()

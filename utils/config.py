@@ -4,7 +4,7 @@ import datetime
 import pickle
 
 class Config:
-    def __init__(self, ratio=0.125, device="cuda:0"):
+    def __init__(self, ratio=0.1, device="cuda:3"):
         self.ratio = ratio
         self.epochs = 150
         self.name = r'QCSMIMO'
