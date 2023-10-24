@@ -6,11 +6,11 @@ import torch.nn as nn
 from torch.nn import init
 from itertools import repeat
 import torch.nn.functional as F
-# from torch._six import container_abcs
+# from vqlayer import VQLayer
 import collections.abc as container_abcs
 from torch.nn.modules.module import Module
-
 import models
+from .vqlayer import VQLayer
 
 
 def _ntuple(n):
@@ -135,6 +135,8 @@ class HybridNet(nn.Module):
         self.phi = nn.Parameter(torch.from_numpy(phi_init).float(), requires_grad=True)
         self.Q = nn.Parameter(torch.from_numpy(np.transpose(phi_init)).float(), requires_grad=True)
 
+        self.quant = VQLayer(config.n_embed,embedding_dim=config.embed_d)
+
         self.num_layers = 6
         self.pre_block = nn.ModuleList()
         for i in range(self.num_layers):
@@ -159,9 +161,10 @@ class HybridNet(nn.Module):
         batch_size = inputs.size(0)
         inputs = torch.unsqueeze(inputs,1)
         y = self.sampling(inputs, self.phi_size)
-        recon = self.recon(y, self.phi_size, batch_size)
+        y_quant,quan_loss,commit_loss = self.quant(y)
+        recon = self.recon(y_quant, self.phi_size, batch_size)
         recon= torch.squeeze(recon,1)
-        return recon
+        return recon,quan_loss,commit_loss
 
     def sampling(self, inputs, init_block): # B C H W
         inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=3), dim=0) # (B W/IB) C H IB
@@ -207,6 +210,7 @@ class HybridNet(nn.Module):
         inputs = torch.cat(torch.split(inputs, split_size_or_sections=8, dim=2), dim=1)
         return inputs
 
-def QCSLoss(x, reco_x):
+def QCSLoss(x, reco_x,quant_loss,commit_loss):
     mse_loss = F.mse_loss(reco_x, x,reduction='sum')/x.shape[0]
-    return mse_loss
+    loss = mse_loss+quant_loss+0.25*commit_loss
+    return loss

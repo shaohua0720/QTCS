@@ -30,8 +30,8 @@ def train_epoch(model, optimizer, train_loader, config):
         optimizer.zero_grad()
         data = data.to(device)
         target = target.to(device)
-        output = model(data)
-        loss = QCSLoss(output,target)
+        output,quant_loss,commit_loss = model(data)
+        loss = QCSLoss(target,output,quant_loss,commit_loss)
             
         loss.backward()
         optimizer.step()
@@ -113,7 +113,7 @@ def main(config):
     start_time = time.time()
 
     start_epoch = 1
-    if config.resume:
+    if config.resume and os.path.exists(config.snapshot_path):
         start_epoch=_load_snapshot(model,config.snapshot_path)
 
     for epoch in range(start_epoch, n_epochs + 1):

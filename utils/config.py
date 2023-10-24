@@ -10,9 +10,9 @@ class Config:
         self.name = r'QCSMIMO'
         self.comments = r'Quantized Compressed Sensing for CSI feedback'
         self.batch_size = 200
-        self.train_data = r'/root/autodl-fs/val.h5'
-        self.val_data = r'/root/autodl-fs/test.h5'
-        self.test_data = r'/root/autodl-fs/test.h5'
+        self.train_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_3p84\\val.h5'
+        self.val_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_3p84\\test.h5'
+        self.test_data = r'E:\\Code_shaohua\\datasets\\qdg_umi5g_3p84\\test.h5'
         self.DDP = False # Distributed Data Parallel enabled/Disable
         now = datetime.datetime.now()
         self.start_time = now.strftime("%Y-%m-%d %H-%M-%S")
@@ -23,6 +23,9 @@ class Config:
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         self.save_every = 5
         self.resume = True # resume training
+
+        self.n_embed = 8 # number of embedding -> log2(self.n_embed) bits quantization
+        self.embed_d = 1 # embedding dimenstion
 
         # Paths
         # self.results = "./results"
