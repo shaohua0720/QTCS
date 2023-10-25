@@ -4,8 +4,8 @@ import datetime
 import pickle
 
 class Config:
-    def __init__(self, ratio=0.1, device="cuda:3"):
-        self.ratio = ratio
+    def __init__(self):
+        self.ratio = 0.1
         self.epochs = 150
         self.name = r'QCSMIMO'
         self.comments = r'Quantized Compressed Sensing for CSI feedback'
@@ -20,7 +20,7 @@ class Config:
         self.lr = 1e-4 # learning rate
 
         self.block_size = 32
-        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+        self.device = r'cuda:0'# torch.device(device if torch.cuda.is_available() else "cpu")
         self.save_every = 5
         self.resume = True # resume training
 
@@ -28,9 +28,10 @@ class Config:
         self.embed_d = 1 # embedding dimenstion
 
         # Paths
-        # self.results = "./results"
+        self.gen_path()
+        
+    def gen_path(self):
         self.log = os.path.join(self.results, str(int(self.ratio * 100)), "log.txt")
-
         self.folder = os.path.join(self.results, str(int(self.ratio * 100)), "models")
         self.model = os.path.join(self.folder, "model.pth")
         self.snapshot_path = os.path.join(self.folder, "model_snp.pth")
@@ -38,6 +39,7 @@ class Config:
         self.info = os.path.join(self.folder, "info.pth")
 
     def check(self):
+        self.gen_path()
         if not os.path.isdir(self.results):
             os.makedirs(self.results)
 
@@ -64,7 +66,6 @@ class Config:
             print("{:<20s}".format(item + ":") + "{:<30s}".format(str(self.__dict__[item])))
             print("-" * 70)
         print("\n")
-
 
 if __name__ == "__main__":
     config = Config()
