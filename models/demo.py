@@ -161,10 +161,10 @@ class HybridNet(nn.Module):
         batch_size = inputs.size(0)
         inputs = torch.unsqueeze(inputs,1)
         y = self.sampling(inputs, self.phi_size)
-        y_quant,quan_loss,commit_loss = self.quant(y)
-        recon = self.recon(y_quant, self.phi_size, batch_size)
+        # y_quant,quan_loss,commit_loss = self.quant(y)
+        recon = self.recon(y, self.phi_size, batch_size)
         recon= torch.squeeze(recon,1)
-        return recon,quan_loss,commit_loss
+        return recon,0,0
 
     def sampling(self, inputs, init_block): # B C H W
         inputs = torch.cat(torch.split(inputs, split_size_or_sections=init_block, dim=3), dim=0) # (B W/IB) C H IB

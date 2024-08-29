@@ -17,5 +17,14 @@
 
 # for distributed running
 # torchrun --standalone --nproc_per_node=4 multigpu_torchrun.py --total_epochs 200 --save_every 10
-torchrun --standalone --nproc_per_node=4 multigpu_torchrun.py
+# torchrun --standalone --nproc_per_node=4 multigpu_torchrun.py
 
+# train='/home/shaohua/Documents/datasets/qcsmimo/qdg_umi5g_3p84/umi_train.h5'
+# val='/home/shaohua/Documents/datasets/qcsmimo/qdg_umi5g_3p84/umi_val.h5'
+
+train='/home/shaohua/Documents/datasets/qcsmimo_rev1/3GPP_38.901_UMa_NLOS_train.h5'
+val='/home/shaohua/Documents/datasets/qcsmimo_rev1/3GPP_38.901_UMa_NLOS_val.h5'
+
+args="--train_data ${train} --val_data ${val} \
+    --test_data ${val} --device cuda:1 --ratio 0.25"
+python Train.py ${args} 1>log.txt 2>&1

@@ -50,13 +50,13 @@ def main(config):
     print('mse = ' + str(mse_test.item()), file=rs_file)
     rs_file.close()
 
-    np.save(os.path.join(foldername, 'nmse_ul'), nmse_ul.cpu())
+    np.save(os.path.join(foldername, 'qcsmimo_nmse_uma'), nmse_ul.cpu())
 
 
 if __name__ == '__main__':
     """Run the script with the best configurations"""
     parser = argparse.ArgumentParser(description='MIMO CSI Compression')  
-    parser.add_argument('--path', type = str, default = r'results/QCSMIMO/10/models', metavar = 'F',
+    parser.add_argument('--path', type = str, default = r'results/QCSMIMO/25/models', metavar = 'F',
                         help = '')
     args = parser.parse_args()
     file = os.path.join(args.path,'config.pkl')
